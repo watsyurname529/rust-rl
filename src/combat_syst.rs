@@ -1,8 +1,7 @@
 use super::components::*;
 use super::GameLog;
-use rltk::console;
 use specs::prelude::*;
-use std::cmp::{max, min};
+use std::cmp::max;
 
 pub struct CombatSyst {}
 

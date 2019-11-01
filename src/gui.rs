@@ -1,7 +1,9 @@
 use super::components::*;
 use super::{GameLog, Map};
 
-use rltk::{Console, Rltk, RGB, Algorithm2D, Point};
+// use std::iter::Iterator;
+
+use rltk::{Algorithm2D, Console, Point, Rltk, RGB};
 use specs::prelude::*;
 
 pub fn draw_ui(ecs: &World, ctx: &mut Rltk) {
@@ -53,20 +55,26 @@ pub fn draw_ui(ecs: &World, ctx: &mut Rltk) {
         }
         y += 1;
     }
+
+    draw_tooltips(ecs, ctx);
 }
 
 pub fn draw_tooltips(ecs: &World, ctx: &mut Rltk) {
     let map = &*ecs.fetch::<Map>();
     let names = ecs.read_storage::<Name>();
-    // let positions = ecs.read_storage::<Position>();
 
     let (m_x, m_y) = ctx.mouse_pos();
     if m_x >= map.width || m_y >= map.height {
         return;
     }
 
-    let mut tooltip : Vec<&String> = Vec::new();
     let idx = map.point2d_to_index(Point::new(m_x, m_y)) as usize;
+    let revealed = map.revealed_tiles[idx];
+    if !revealed {
+        return;
+    }
+
+    let mut tooltip: Vec<&String> = Vec::new();
     for entity in map.tile_content[idx].iter() {
         if let Some(name) = names.get(*entity) {
             tooltip.push(&name.name);
@@ -76,6 +84,13 @@ pub fn draw_tooltips(ecs: &World, ctx: &mut Rltk) {
     if tooltip.is_empty() {
         return;
     } else {
-        // let width = tooltip.max_by();
+        let width = tooltip.iter().max().unwrap().len() as i32;
+        let x = m_x - width;
+        let mut y = m_y;
+
+        for s in tooltip.iter() {
+            ctx.print_color(x, y, RGB::named(rltk::WHITE), RGB::named(rltk::GREY), &s);
+            y += 1;
+        }
     }
 }

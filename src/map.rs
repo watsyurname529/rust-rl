@@ -164,7 +164,6 @@ impl Map {
         }
 
         let idx = (y * self.width) + x;
-        // return self.tiles[idx as usize] != TileType::Wall;
         return !self.blocked_tiles[idx as usize];
     }
 
@@ -254,16 +253,18 @@ pub fn draw_map(map: &Map, ctx: &mut Rltk) {
 
         if map.revealed_tiles[idx] {
             let glyph;
-            let mut fg = RGB::from_f32(1.0, 1.0, 1.0);
-            let mut bg = RGB::from_f32(0.0, 0.0, 0.0);
+            let mut fg;
+            let mut bg;
 
             match tile {
                 TileType::Floor => {
                     fg = RGB::from_f32(0.4, 0.4, 0.7);
+                    bg = RGB::from_f32(0.0, 0.0, 0.0);
                     glyph = rltk::to_cp437('.');
                 }
                 TileType::Wall => {
-                    fg = RGB::from_f32(0., 0.4, 0.);
+                    fg = RGB::from_f32(0.0, 0.4, 0.0);
+                    bg = RGB::from_f32(0.0, 0.0, 0.0);
                     glyph = rltk::to_cp437('#');
                 }
             }

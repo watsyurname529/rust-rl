@@ -1,4 +1,4 @@
-use rltk::{Algorithm2D, Console, GameState, Point, Rltk, RGB};
+use rltk::{Algorithm2D, Console, GameState, Point, Rltk};
 use specs::prelude::*;
 #[macro_use]
 extern crate specs_derive;
@@ -32,6 +32,9 @@ pub use gui::*;
 
 mod game_log;
 pub use game_log::*;
+
+mod entity_spawn;
+pub use entity_spawn::*;
 
 mod util;
 pub use util::*;
@@ -96,7 +99,7 @@ impl GameState for State {
                 new_runstate = RunState::AwaitingInput;
             }
             RunState::Exit => {
-                std::process::exit(0);
+                ctx.quit();
             }
         }
 
@@ -127,8 +130,12 @@ impl GameState for State {
 
 fn main() {
     let context = Rltk::init_simple8x8(80, 50, "RL", "resources");
+    // context.with_post_scanlines(true);
+
     let mut gs = State { ecs: World::new() };
     gs.ecs.insert(RunState::PreRun);
+    gs.ecs.insert(GameLog::new(10));
+    gs.ecs.insert(rltk::RandomNumberGenerator::new());
 
     gs.ecs.register::<Position>();
     gs.ecs.register::<Renderable>();
@@ -141,72 +148,21 @@ fn main() {
     gs.ecs.register::<Viewshed>();
     gs.ecs.register::<BlocksTile>();
     gs.ecs.register::<BlocksSight>();
+    gs.ecs.register::<Item>();
+    gs.ecs.register::<Potion>();
 
     let map = Map::new_map_rooms(MAP_WIDTH, MAP_HEIGHT);
     let (player_x, player_y) = map.rooms[0].center();
     for room in map.rooms.iter().skip(1) {
-        let (x, y) = room.center();
-        gs.ecs
-            .create_entity()
-            .with(Position {
-                pt: Point::new(x, y),
-            })
-            .with(Renderable {
-                glyph: rltk::to_cp437('g'),
-                fg: RGB::named(rltk::RED),
-                bg: RGB::named(rltk::BLACK),
-            })
-            .with(Viewshed {
-                visible_tiles: Vec::new(),
-                range: 8,
-                dirty: true,
-            })
-            .with(Name {
-                name: "Goblin".to_string(),
-            })
-            .with(Monster {})
-            .with(CombatStats {
-                max_hp: 10,
-                cur_hp: 10,
-                atk: 4,
-                def: 1,
-            })
-            .with(BlocksTile {})
-            .with(BlocksSight {})
-            .build();
+        // let (x, y) = room.center();
+        // monster(&mut gs.ecs, x, y);
+        entity_spawn::populate_room(&mut gs.ecs, room);
     }
 
-    let player_entity = gs
-        .ecs
-        .create_entity()
-        .with(Position {
-            pt: Point::new(player_x, player_y),
-        })
-        .with(Renderable {
-            glyph: rltk::to_cp437('@'),
-            fg: RGB::named(rltk::YELLOW),
-            bg: RGB::named(rltk::BLACK),
-        })
-        .with(Name {
-            name: "Player".to_string(),
-        })
-        .with(Player {})
-        .with(Viewshed {
-            visible_tiles: Vec::new(),
-            range: 8,
-            dirty: true,
-        })
-        .with(CombatStats {
-            max_hp: 30,
-            cur_hp: 30,
-            atk: 5,
-            def: 3,
-        })
-        .build();
+    let player_entity = entity_spawn::player(&mut gs.ecs, player_x, player_y);
 
     gs.ecs.insert(map);
     gs.ecs.insert(player_entity);
     gs.ecs.insert(Point::new(player_x, player_y));
-    gs.ecs.insert(GameLog::new(10));
     rltk::main_loop(context, gs);
 }

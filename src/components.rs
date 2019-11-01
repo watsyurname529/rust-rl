@@ -58,3 +58,22 @@ pub struct BlocksTile {}
 #[derive(Component, Default)]
 #[storage(NullStorage)]
 pub struct BlocksSight {}
+
+#[derive(Component, Debug)]
+pub struct InBackpack {
+    pub owner: Entity,
+}
+
+#[derive(Component, Debug)]
+pub struct ItemPickupMessage {
+    pub collected_by : Entity,
+    pub item : Entity
+}
+
+#[derive(Component, Default)]
+#[storage(NullStorage)]
+pub struct Item {}
+
+#[derive(Component, Default)]
+#[storage(NullStorage)]
+pub struct Potion {}
