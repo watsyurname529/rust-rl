@@ -31,27 +31,26 @@ impl<'a> System<'a> for MonsterAI {
                     melee_msg
                         .insert(entity, MeleeMessage { target: *player })
                         .expect("Unable to insert melee message.");
-                    return;
-                }
+                } else {
+                    let path = rltk::a_star_search(
+                        map.point2d_to_index(pos.pt),
+                        map.point2d_to_index(player_pos),
+                        &mut *map,
+                    );
 
-                let path = rltk::a_star_search(
-                    map.point2d_to_index(pos.pt),
-                    map.point2d_to_index(player_pos),
-                    &mut *map,
-                );
+                    // println!("{}, {}", path.success, path.steps.len());
 
-                // println!("{}, {}", path.success, path.steps.len());
+                    if path.success && path.steps.len() > 1 {
+                        let mut idx = map.point2d_to_index(pos.pt);
+                        map.blocked_tiles[idx as usize] = false;
 
-                if path.success && path.steps.len() > 1 {
-                    let mut idx = map.point2d_to_index(pos.pt);
-                    map.blocked_tiles[idx as usize] = false;
+                        pos.pt.x = path.steps[1] % map.width;
+                        pos.pt.y = path.steps[1] / map.width;
 
-                    pos.pt.x = path.steps[1] % map.width;
-                    pos.pt.y = path.steps[1] / map.width;
-
-                    idx = map.point2d_to_index(pos.pt);
-                    map.blocked_tiles[idx as usize] = true;
-                    vs.dirty = true;
+                        idx = map.point2d_to_index(pos.pt);
+                        map.blocked_tiles[idx as usize] = true;
+                        vs.dirty = true;
+                    }
                 }
             }
         }

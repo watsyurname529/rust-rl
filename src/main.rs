@@ -36,6 +36,9 @@ pub use game_log::*;
 mod entity_spawn;
 pub use entity_spawn::*;
 
+mod inventory_syst;
+pub use inventory_syst::*;
+
 mod util;
 pub use util::*;
 
@@ -48,6 +51,7 @@ pub enum RunState {
     PreRun,
     PlayerTurn,
     MonsterTurn,
+    ShowInventory,
     Exit,
 }
 
@@ -63,6 +67,8 @@ impl State {
         vis.run_now(&self.ecs);
         let mut mon = MonsterAI {};
         mon.run_now(&self.ecs);
+        let mut items = ItemManageSyst {};
+        items.run_now(&self.ecs);
         let mut combat = CombatSyst {};
         combat.run_now(&self.ecs);
         let mut damage = DamageSyst {};
@@ -96,6 +102,9 @@ impl GameState for State {
             }
             RunState::MonsterTurn => {
                 self.run_systems();
+                new_runstate = RunState::AwaitingInput;
+            }
+            RunState::ShowInventory => {
                 new_runstate = RunState::AwaitingInput;
             }
             RunState::Exit => {
@@ -150,12 +159,12 @@ fn main() {
     gs.ecs.register::<BlocksSight>();
     gs.ecs.register::<Item>();
     gs.ecs.register::<Potion>();
+    gs.ecs.register::<ItemPickupMessage>();
+    gs.ecs.register::<InBackpack>();
 
     let map = Map::new_map_rooms(MAP_WIDTH, MAP_HEIGHT);
     let (player_x, player_y) = map.rooms[0].center();
     for room in map.rooms.iter().skip(1) {
-        // let (x, y) = room.center();
-        // monster(&mut gs.ecs, x, y);
         entity_spawn::populate_room(&mut gs.ecs, room);
     }
 

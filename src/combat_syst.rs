@@ -35,14 +35,23 @@ impl<'a> System<'a> for CombatSyst {
                             "{} deals {} hp damage to {}.",
                             &name.name, damage, &target_name.name
                         ));
-                        damage_msg
-                            .insert(melee.target, DamageMessage { val: damage })
-                            .expect("Unable to insert damage message.");
+
+                        let temp = damage_msg.get_mut(melee.target);
+                        match temp {
+                            None => {
+                                damage_msg
+                                    .insert(melee.target, DamageMessage { val: damage })
+                                    .expect("Unable to insert damage message.");
+                            }
+
+                            Some(msg) => {
+                                msg.val += damage;
+                            }
+                        };
                     }
                 }
             }
         }
-
         melee_msg.clear();
     }
 }
